@@ -56,8 +56,3 @@ class LSTMLanguageModel:
             output_word = self.reverse_index[predicted]
             seed_text += " " + output_word
         return seed_text
-
-
-
-        
-
