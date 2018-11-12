@@ -40,7 +40,7 @@ class LSTMLanguageModel:
 
         self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         earlystop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-        self.model.fit(predictors, label, epochs=100, verbose=1, callbacks=[earlystop])
+        self.model.fit(predictors, label, epochs=1, verbose=1, callbacks=[earlystop], batch_size=512)
         print(self.model.summary())
 
     def generate_reverse_index(self):
