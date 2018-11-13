@@ -1,7 +1,7 @@
 import utils
 
 def main():     
-    utils.generate_word_embeddings()
+    utils.generate_w2c_word_embeddings()
 
     W1, W2, loss_vs_epochs = utils.get_word_embeddings()
     

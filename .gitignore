@@ -117,6 +117,9 @@ Icon
 
 # Thumbnails
 ._*
+Icon\r
+src/.vscode/
+src/Icon\r
 
 # Files that might appear in the root of a volume
 .DocumentRevisions-V100
