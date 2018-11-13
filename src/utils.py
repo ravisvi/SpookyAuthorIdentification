@@ -78,8 +78,8 @@ def generate_word_embeddings():
     train_x, _ = dm.get_train_data()
     
     w2c = Word2Vec(method="skipgram", corpus=list(train_x),
-                window_size=7, n_hidden=2,
-                n_epochs=10, learning_rate=0.8)
+                window_size=5, n_hidden=128,
+                n_epochs=3, learning_rate=0.08)
     
     W1, W2, loss_vs_epoch = w2c.run()
 
