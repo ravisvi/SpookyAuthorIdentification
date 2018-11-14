@@ -99,7 +99,7 @@ def generate_w2c_word_embeddings():
     with open('embeddings.pickle', 'wb') as handle:
         pickle.dump(pkl_dump, handle)
 
-def get_word_embeddings():
+def get_w2c_word_embeddings():
     pkl_dump = None
     try:
         with open('embeddings.pickle', 'rb') as handle:
@@ -139,17 +139,15 @@ Returns:
     x_test: Test data
     y_test: Test label
 """
-def get_train_val_test_data():
-    dm = DataModel()
-    data, labels = dm.get_train_data()
+def get_train_val_test_data(data, labels, train_split=0.8):
     train_size = len(data)
     indices = np.arange(data.shape[0])
     np.random.shuffle(indices)
     data = data[indices]
     labels = labels[indices]
-    train_samples = int(constants.TRAIN_SPLIT * train_size)
+    train_samples = int(train_split * train_size)
 
-    val_samples = int(constants.TRAIN_SPLIT * (train_size + (1-train_size)/2))
+    val_samples = int(train_split * (train_size + (1-train_size)/2))
 
     x_train = data[:train_samples]
     y_train = labels[:train_samples]
@@ -199,4 +197,3 @@ def get_word_index(texts, max_unique_words=20000):
     print('Found %s unique tokens.' % len(word_index))
     data = pad_sequences(sequences, maxlen=constants.MAX_SEQUENCE_LENGTH)
     return word_index, data
-    

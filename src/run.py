@@ -3,7 +3,7 @@ import utils
 def main():     
     utils.generate_w2c_word_embeddings()
 
-    W1, W2, loss_vs_epochs = utils.get_word_embeddings()
+    W1, W2, loss_vs_epochs = utils.get_w2c_word_embeddings()
     
     print('W1: ' + str(W1))
     print('W2: ' + str(W2))
