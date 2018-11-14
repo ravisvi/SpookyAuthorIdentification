@@ -11,6 +11,7 @@ from keras.preprocessing.sequence import pad_sequences
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
+from keras.models import model_from_json
 import constants
 
 
@@ -193,7 +194,7 @@ def get_embedding_matrix(embeddings, word_index):
     return embedding_matrix
 
 
-def get_word_index(texts, max_unique_words=1000):
+def get_word_index(texts, max_unique_words=20000):
     """
     Get word index for the given text.
 
@@ -213,3 +214,21 @@ def get_word_index(texts, max_unique_words=1000):
     print('Found %s unique tokens.' % len(word_index))
     data = pad_sequences(sequences, maxlen=constants.MAX_SEQUENCE_LENGTH)
     return word_index, data
+
+def load_model_and_evaluate(model_file_name, weights_file_name, x_test):
+    # load json and create model
+    json_file = open(model_file_name, 'r')
+    loaded_model_json = json_file.read()
+    json_file.close()
+    loaded_model = model_from_json(loaded_model_json)
+    # load weights into new model
+    loaded_model.load_weights(weights_file_name)
+    print("Loaded model from disk")
+    
+    # evaluate loaded model on test data
+    loaded_model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
+
+    y = loaded_model.predict_classes(x_test)
+    #save this to pickle or write the answers to some json file.
+
+    print('Saved.')
