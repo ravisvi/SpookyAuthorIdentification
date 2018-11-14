@@ -11,16 +11,19 @@ def train_lstm(embedding_matrix, x_train, y_train, x_val, y_val, labels, word_in
                                 weights=[embedding_matrix],
                                 input_length=MAX_SEQUENCE_LENGTH,
                                 trainable=False))
-    model.add(LSTM(64,return_sequences=True))
+    # 64
+    model.add(LSTM(16,return_sequences=True))
     model.add(Dropout(0.5))
-    model.add(LSTM(64))
+    # 64
+    model.add(LSTM(16))
     model.add(Dense(labels, activation='softmax'))
     model.compile(loss='categorical_crossentropy',
                 optimizer='rmsprop',
                 metrics=['acc'])
 
+    # 10, 128
     model.fit(x_train, y_train, validation_data=(x_val, y_val),
-            epochs=10, batch_size=128)
+            epochs=2, batch_size=32)
     return model
 
 def run_lstm():
