@@ -13,6 +13,7 @@ from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
 from keras.models import model_from_json
 import constants
+import csv
 
 
 def clean_text(text):
@@ -163,7 +164,7 @@ def get_train_val_test_data(data, labels, train_split=0.8):
     labels = labels[indices]
     train_samples = int(train_split * train_size)
 
-    val_samples = int(train_split * (train_size + (1-train_size)/2))
+    val_samples = train_samples + int((train_size - train_samples)/2)
 
     x_train = data[:train_samples]
     y_train = labels[:train_samples]
@@ -215,7 +216,22 @@ def get_word_index(texts, max_unique_words=20000):
     data = pad_sequences(sequences, maxlen=constants.MAX_SEQUENCE_LENGTH)
     return word_index, data
 
-def load_model_and_evaluate(model_file_name, weights_file_name, x_test):
+
+def load_model_and_evaluate(model_file_name, weights_file_name, x_test, ls='binary_crossentropy', optz='rmsprop', metric=['accuracy']):
+    """
+    Loads a saved model and initializes the model with it's weights and predicts y for the x_test
+
+    Args:
+        model_file_name: The saved model file name. Expects a complete URI if not present in the same folder.
+        weights_file_name: The weights that need to be loaded for the model. Again, complete URI if not present in the current folder.
+        x_test: The test data for which the model predicts the outcome.
+        ls: The loss type, default= binary_crossentropy
+        optz: Optimizer deafault = rmsprop.
+        metric: the metric default = ['accuracy']
+
+    Returns:
+        y: The predictions for the x_test.
+    """
     # load json and create model
     json_file = open(model_file_name, 'r')
     loaded_model_json = json_file.read()
@@ -223,12 +239,36 @@ def load_model_and_evaluate(model_file_name, weights_file_name, x_test):
     loaded_model = model_from_json(loaded_model_json)
     # load weights into new model
     loaded_model.load_weights(weights_file_name)
+    print(loaded_model.summary())
     print("Loaded model from disk")
-    
+
     # evaluate loaded model on test data
-    loaded_model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
+    loaded_model.compile(loss=ls, optimizer=optz, metrics=metric)
 
-    y = loaded_model.predict_classes(x_test)
-    #save this to pickle or write the answers to some json file.
+    y = loaded_model.predict(x_test)
+    # save this to pickle or write the answers to some json file.
+    return y
 
-    print('Saved.')
+
+def write_kaggle_file(y_prediction, text_id_list, kaggle_filename='output/kaggle.csv'):
+    """
+    Get word index for the given text.
+
+    Args:
+        y_prediction: The y_prediction on test data.
+        text_id_list: The id list for each of the prediction.
+        kaggle_filename: Filename to save the kaggle csv, default ='output/kaggle.csv'
+
+    Returns:
+        word_index: The word indices for the embeddings of each unique word in the texts.
+        data: pad sequenced data for the input texts
+    """
+    with open(kaggle_filename, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',')
+        writer.writerow(['id', 'EAP', 'HPL', 'MWS'])
+
+        for i in range(len(y_prediction)):
+            tempList = []
+            tempList.append(text_id_list[i])
+            tempList.extend(y_prediction[i])
+            writer.writerow(tempList)
