@@ -4,7 +4,8 @@ from keras.preprocessing.text import Tokenizer
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.models import Sequential
 import keras.utils as ku 
-import numpy as np 
+import numpy as np
+import string 
 
 class LSTMLanguageModel:
     def __init__(self, embedding_size=256, layer_size=256):
@@ -63,6 +64,21 @@ class LSTMLanguageModel:
         self.model.fit(predictors, label, epochs=50, verbose=1, callbacks=[earlystop], batch_size=512)
         print(self.model.summary())
 
+    def generate_text(self, seed_seq, seq_len):
+        if seed_seq.shape[1] != 1:
+            raise Exception("Input must have dimension 1")
+        res = []
+        for seq in seed_seq[:-1]:
+            predicted = self.model.predict_classes(seq, verbose=0)
+            res.extend(predicted.tolist())
+        curr_input = seed_seq[-1]
+        for _ in xrange(seq_len):
+            if curr_input.shape[1] != 1:
+                raise Exception("Input must have dimension 1")
+            predicted = self.model.predict_classes(curr_input, verbose=0)
+            res.extend(predicted.tolist())
+            curr_input = predicted.reshape((1,1))
+        return res
 
     def generate_text(self, seed_text, next_words, max_sequence_len):
         for _ in range(next_words):

@@ -2,6 +2,7 @@ import sys
 from lang_model_lstm import LSTMLanguageModel
 import numpy as np
 import string
+import cPickle as pickle
 
 class DataGenerator(object):
     def __init__(self, input_size=1):
@@ -35,6 +36,22 @@ class DataGenerator(object):
     def get_vocabulary_size(self): 
         return len(self.word_idx)
 
+    def get_sequence(self, words):
+        result = []
+        for word in words:
+            if word not in self.word_idx:
+                raise Exception("Word: " + word + " not found in word index. Model currently only generates text on vocabulary seen before")
+            result.append(self.word_idx[word])
+        return np.asarray(result).reshape((len(words),1))
+
+    def get_sentence(self, input_seq):
+        result = ""
+        for token in input_seq:
+            if token not in self.reverse_idx:
+                raise Exception("Token: " + str(token) + " not in reverse index")
+            result = result + " " + self.reverse_idx[token]
+        return result
+
 def main(fname):
     data_object = DataGenerator()
     lm_object = LSTMLanguageModel()
@@ -53,8 +70,15 @@ def main(fname):
     print(predictors.shape)
     print(label.shape)
     print(data_object.get_vocabulary_size())
-    lm_object.train_model(data_object)
+    #lm_object.train_model(data_object)
+    return lm_object, data_object
+
+def generate_sentence(lm_object, data_object, sentence, seq_len):
+    sentence = sentence.translate(None, string.punctuation).lower().split()
+    lstm_seq = data_object.get_sequence(sentence)
+    res = lm_object.generate_text(lstm_seq, seq_len)
+    print(data_object.get_sentence(res))
 
 
 if __name__=="__main__":
-    main("/Users/ambermadvariya/Documents/585/project/data/train.csv")
+    lm_object, data_object = main("/Users/ambermadvariya/Documents/585/project/data/train.csv")
