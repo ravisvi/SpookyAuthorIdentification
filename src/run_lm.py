@@ -63,14 +63,14 @@ def main(fname):
             first = False
             continue
         text_id, text, author = line.split('","')
-        if not author.startswith("EAP"): continue
+        #if not author.startswith("EAP"): continue
         text = text.translate(None, string.punctuation).lower().split()
         data_object.parse_text(text)
     predictors, label = data_object.get_inputs()
     print(predictors.shape)
     print(label.shape)
     print(data_object.get_vocabulary_size())
-    #lm_object.train_model(data_object)
+    lm_object.train_model(data_object)
     return lm_object, data_object
 
 def generate_sentence(lm_object, data_object, sentence, seq_len):
@@ -81,4 +81,4 @@ def generate_sentence(lm_object, data_object, sentence, seq_len):
 
 
 if __name__=="__main__":
-    lm_object, data_object = main("/Users/ambermadvariya/Documents/585/project/data/train.csv")
+    lm_object, data_object = main("../data/train.csv")
