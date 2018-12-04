@@ -55,13 +55,15 @@ class LSTMLanguageModel:
         label = ku.to_categorical(label, num_classes=total_words)
         self.model = Sequential()
         self.model.add(Embedding(total_words, self.embedding_size, input_length=predictors.shape[1]))
-        self.model.add(LSTM(self.layer_size))#, return_sequences=True))
+        self.model.add(LSTM(self.layer_size, return_sequences=True))
+        #self.model.add(LSTM(self.layer_size, return_sequences=True))
         self.model.add(Dropout(0.3))
-        self.model.add(Dense(total_words, activation='softmax'))
+        self.model.add(TimeDistributed(Dense(total_words)))
+        self.model.add(Activation('softmax'))
 
-        self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+        self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['categorical_accuracy'])
         earlystop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-        self.model.fit(predictors, label, epochs=50, verbose=1, callbacks=[earlystop], batch_size=512)
+        self.model.fit(predictors, label, epochs=200, verbose=1, callbacks=[earlystop], batch_size=512)
         print(self.model.summary())
 
     def generate_text(self, seed_seq, seq_len):
@@ -70,9 +72,11 @@ class LSTMLanguageModel:
         res = []
         for seq in seed_seq[:-1]:
             predicted = self.model.predict_classes(seq, verbose=0)
-            res.extend(predicted.tolist())
-        curr_input = seed_seq[-1]
+            res.extend(seq.tolist())
+        res.extend(seed_seq[-1].tolist())
+        curr_input = seed_seq[-1].reshape((1,1))
         for _ in xrange(seq_len):
+            print curr_input
             if curr_input.shape[1] != 1:
                 raise Exception("Input must have dimension 1")
             predicted = self.model.predict_classes(curr_input, verbose=0)
@@ -80,6 +84,7 @@ class LSTMLanguageModel:
             curr_input = predicted.reshape((1,1))
         return res
 
+    """
     def generate_text(self, seed_text, next_words, max_sequence_len):
         for _ in range(next_words):
             token_list = self.tokenizer.texts_to_sequences([seed_text])[0]
@@ -89,3 +94,4 @@ class LSTMLanguageModel:
             output_word = self.reverse_index[predicted]
             seed_text += " " + output_word
         return seed_text
+    """
