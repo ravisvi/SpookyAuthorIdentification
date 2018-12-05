@@ -1,5 +1,5 @@
 from keras.preprocessing.sequence import pad_sequences
-from keras.layers import Embedding, LSTM, Dense, Dropout, TimeDistributed, Activation
+from keras.layers import Embedding, LSTM, Dense, Dropout, TimeDistributed, Activation, Flatten
 from keras.preprocessing.text import Tokenizer
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.models import Sequential
@@ -8,12 +8,13 @@ import numpy as np
 import string 
 
 class LSTMLanguageModel:
-    def __init__(self, embedding_size=256, layer_size=256):
+    def __init__(self, embedding_size=256, layer_size=256, batch_size=512):
         self.tokenizer = Tokenizer()
         self.reverse_index = {}
         self.max_len = -1*float("inf")
         self.embedding_size = embedding_size
         self.layer_size = layer_size
+        self.batch_size = batch_size
 
     def text_to_seq(self, text):
         self.tokenizer.fit_on_texts([text])
@@ -38,7 +39,7 @@ class LSTMLanguageModel:
         batch_size = data_generator.batch_size
         self.model.add(Embedding(vocabulary, self.embedding_size, input_length=num_steps))
         self.model.add(LSTM(self.layer_size, return_sequences=True))
-        self.model.add(LSTM(self.layer_size, return_sequences=True))
+        #self.model.add(LSTM(self.layer_size, return_sequences=True))
         self.model.add(Dropout(0.5))
         self.model.add(TimeDistributed(Dense(vocabulary)))
         self.model.add(Activation('softmax'))
@@ -52,18 +53,19 @@ class LSTMLanguageModel:
     def train_model(self, data_object):
         predictors, label = data_object.get_inputs()
         total_words = data_object.get_vocabulary_size()
+        print predictors.shape, label.shape, total_words
         label = ku.to_categorical(label, num_classes=total_words)
         self.model = Sequential()
-        self.model.add(Embedding(total_words, self.embedding_size, input_length=predictors.shape[1]))
-        self.model.add(LSTM(self.layer_size, return_sequences=True))
+        #self.model.add(Embedding(total_words, self.embedding_size, input_length=predictors.shape[1]))
+        self.model.add(LSTM(self.layer_size, batch_input_shape=(self.batch_size, 1, predictors.shape[2]), return_sequences=True))
         #self.model.add(LSTM(self.layer_size, return_sequences=True))
         self.model.add(Dropout(0.3))
-        self.model.add(TimeDistributed(Dense(total_words)))
-        self.model.add(Activation('softmax'))
+        self.model.add(Flatten())
+        self.model.add(Dense(total_words, activation='softmax'))
 
-        self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['categorical_accuracy'])
+        self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         earlystop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-        self.model.fit(predictors, label, epochs=200, verbose=1, callbacks=[earlystop], batch_size=512)
+        self.model.fit(predictors, label, epochs=500, verbose=1, callbacks=[earlystop], batch_size=self.batch_size)
         print(self.model.summary())
 
     def generate_text(self, seed_seq, seq_len):
