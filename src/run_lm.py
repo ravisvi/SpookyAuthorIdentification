@@ -10,11 +10,7 @@ class DataGenerator(object):
         self.input_size = input_size
         self.word_idx = {}
         self.reverse_idx = {}
-        self.word_idx["<s>"] = 0
-        self.reverse_idx[0] = "<s>"
-        self.word_idx["</s>"] = 1
-        self.reverse_idx[1] = "</s>"
-        self.count = 2
+        self.count = 0
         self.input_seq = []
         self.target_seq = []
         self.vector_size = 1
@@ -73,10 +69,10 @@ class DataGenerator(object):
     def get_sequence(self, words):
         result = []
         for word in words:
-            if word not in self.word_idx:
+            if word not in self.glove:
                 raise Exception("Word: " + word + " not found in word index. Model currently only generates text on vocabulary seen before")
-            result.append(self.word_idx[word])
-        return np.asarray(result).reshape((len(words),1))
+            result.append(self.glove[word])
+        return np.asarray(result).reshape((len(words), 1, self.vector_size))
 
     def get_sentence(self, input_seq):
         result = ""
@@ -86,9 +82,22 @@ class DataGenerator(object):
             result = result + " " + self.reverse_idx[token]
         return result
 
+    def get_word(self, idx):
+        if idx not in self.reverse_idx:
+            raise Exception("idx: " + str(idx) + "not in reverse index")
+        return self.reverse_idx[idx]
+
+    def get_vector(self, word):
+        if word not in self.glove:
+            raise Exception("word: " + str(word) + "not in glove")
+        return self.glove[word]
+
+    def get_vector_size(self):
+        return self.vector_size
+
 def main(glove_fname, fname):
     data_object = DataGenerator()
-    lm_object = LSTMLanguageModel()
+    lm_object = LSTMLanguageModel(layer_size=1,epochs=1)
     infile = open(fname)
     first = True
     input_seq = []
@@ -99,17 +108,32 @@ def main(glove_fname, fname):
             continue
         text_id, text, author = line.split('","')
         if not author.startswith("EAP"): continue
-        text = re.findall(r"[\w']+|[.,!?;]", text.lower())
+        text = text.replace("-"," ")
+        text = text.translate(None, string.punctuation).lower().split()
+        text.append(".")
+        #text = re.findall(r"[\w']+|[.,!?;]", text.lower())
         data_object.parse_text(text)
     predictors, label = data_object.get_inputs()
     lm_object.train_model(data_object)
     return lm_object, data_object
 
 def generate_sentence(lm_object, data_object, sentence, seq_len):
+    sentence = sentence.replace("-"," ")
     sentence = sentence.translate(None, string.punctuation).lower().split()
-    lstm_seq = data_object.get_sequence(sentence)
-    res = lm_object.generate_text(lstm_seq, seq_len)
-    print(data_object.get_sentence(res))
+    seed_seq = data_object.get_sequence(sentence)
+    res = []
+    res.extend(sentence)
+    vector_size = data_object.get_vector_size()
+    for seq in seed_seq[:-1]:
+        seq = seq.reshape((1,1,vector_size))
+        predicted = lm_object.model_predict(seq)
+    curr_input = seed_seq[-1].reshape((1,1,vector_size))
+    for _ in xrange(seq_len):
+        predicted = lm_object.model_predict(curr_input)[0]
+        curr_word = data_object.get_word(predicted)
+        res.append(curr_word)
+        curr_input = data_object.get_vector(curr_word).reshape((1,1,vector_size))
+    print " ".join(res)
 
 
 if __name__=="__main__":
