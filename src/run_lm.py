@@ -12,7 +12,7 @@ def main(glove_fname, fname, vec=True):
         data_object = DataGeneratorVector()
     else:
         data_object = DataGenerator()
-    lm_object = LSTMLanguageModel(layer_size=1,epochs=1)
+    lm_object = LSTMLanguageModel()
     infile = open(fname)
     first = True
     input_seq = []
@@ -65,4 +65,4 @@ def generate_sentence(lm_object, data_object, sentence, seq_len, vec=True):
 
 
 if __name__=="__main__":
-    lm_object, data_object = main("../data/glove.6B.50d.txt","../data/train.csv",vec=False)
+    lm_object, data_object = main("../data/glove.6B.50d.txt","../data/train.csv")
