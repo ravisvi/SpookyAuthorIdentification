@@ -6,9 +6,10 @@ from keras.models import Sequential
 import keras.utils as ku 
 import numpy as np
 import string 
+import keras.backend as K
 
 class LSTMLanguageModel:
-    def __init__(self, embedding_size=256, layer_size=256, batch_size=128, epochs=100):
+    def __init__(self, embedding_size=50, layer_size=128, batch_size=128, epochs=100):
         self.tokenizer = Tokenizer()
         self.reverse_index = {}
         self.max_len = -1*float("inf")
@@ -17,21 +18,11 @@ class LSTMLanguageModel:
         self.batch_size = batch_size
         self.epochs = epochs
 
-    def text_to_seq(self, text):
-        self.tokenizer.fit_on_texts([text])
-        token_list = self.tokenizer.texts_to_sequences([text])[0]
-        input_sequences = []
-        for i in range(1, len(token_list)):
-            sequence = token_list[:i+1]
-            if len(sequence) > self.max_len: self.max_len = len(sequence)
-            input_sequences.append(sequence)
-        return input_sequences
-
-    def get_input(self, input_sequences):
-        return np.array(pad_sequences(input_sequences, maxlen=self.max_len, padding='pre'))
-
-    def finish_corpus(self):
-        self.total_words = len(self.tokenizer.word_index) + 1
+    def perplexity(self, y_true, y_pred):
+        print y_true, y_pred
+        cross_entropy = K.sparse_categorical_crossentropy(y_true, y_pred)
+        perplexity = K.exp(cross_entropy)
+        return perplexity
 
     def train_model_generator(self, data_generator, data_path=""):
         self.model = Sequential()
@@ -55,12 +46,33 @@ class LSTMLanguageModel:
         predictors, label = data_object.get_inputs()
         total_words = data_object.get_vocabulary_size()
         print total_words
+        self.vector_size = predictors.shape[1]
+        predictors = predictors[:1]
+        label = label[:1]
+        #label = ku.to_categorical(label, num_classes=total_words)
+        print predictors.shape, label.shape
+        self.model = Sequential()
+        self.model.add(Embedding(total_words, self.embedding_size, input_length=self.vector_size))
+        self.model.add(LSTM(self.layer_size, return_sequences=True))
+        self.model.add(LSTM(self.layer_size))
+        self.model.add(Dense(self.layer_size, activation='relu'))
+        self.model.add(Dense(total_words, activation='softmax'))
+        print(self.model.summary())
+
+        self.model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=['accuracy',self.perplexity])
+        earlystop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
+        self.model.fit(predictors, label, epochs=self.epochs, verbose=1, callbacks=[earlystop], batch_size=self.batch_size)
+
+    def train_model_vec(self, data_object):
+        predictors, label = data_object.get_inputs()
+        total_words = data_object.get_vocabulary_size()
+        print total_words
         self.vector_size = predictors.shape[2]
         label = ku.to_categorical(label, num_classes=total_words)
         self.model = Sequential()
         self.model.add(LSTM(self.layer_size, input_shape=(1, self.vector_size), return_sequences=True))
         self.model.add(LSTM(self.layer_size))
-        self.model.add(Dense(self.layer_size))
+        self.model.add(Dense(self.layer_size, activation='relu'))
         self.model.add(Dense(total_words, activation='softmax'))
         print(self.model.summary())
 
