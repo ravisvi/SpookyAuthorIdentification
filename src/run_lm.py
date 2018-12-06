@@ -97,7 +97,7 @@ class DataGenerator(object):
 
 def main(glove_fname, fname):
     data_object = DataGenerator()
-    lm_object = LSTMLanguageModel(layer_size=1,epochs=1)
+    lm_object = LSTMLanguageModel()
     infile = open(fname)
     first = True
     input_seq = []

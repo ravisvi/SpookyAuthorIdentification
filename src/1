@@ -8,14 +8,13 @@ import numpy as np
 import string 
 
 class LSTMLanguageModel:
-    def __init__(self, embedding_size=256, layer_size=256, batch_size=128, epochs=100):
+    def __init__(self, embedding_size=256, layer_size=256, batch_size=512):
         self.tokenizer = Tokenizer()
         self.reverse_index = {}
         self.max_len = -1*float("inf")
         self.embedding_size = embedding_size
         self.layer_size = layer_size
         self.batch_size = batch_size
-        self.epochs = epochs
 
     def text_to_seq(self, text):
         self.tokenizer.fit_on_texts([text])
@@ -54,20 +53,47 @@ class LSTMLanguageModel:
     def train_model(self, data_object):
         predictors, label = data_object.get_inputs()
         total_words = data_object.get_vocabulary_size()
-        print total_words
-        self.vector_size = predictors.shape[2]
+        print predictors.shape, label.shape, total_words
         label = ku.to_categorical(label, num_classes=total_words)
         self.model = Sequential()
-        self.model.add(LSTM(self.layer_size, input_shape=(1, self.vector_size), return_sequences=True))
-        self.model.add(LSTM(self.layer_size))
-        self.model.add(Dense(self.layer_size))
+        #self.model.add(Embedding(total_words, self.embedding_size, input_length=predictors.shape[1]))
+        self.model.add(LSTM(self.layer_size, batch_input_shape=(self.batch_size, 1, predictors.shape[2]), return_sequences=True))
+        #self.model.add(LSTM(self.layer_size, return_sequences=True))
+        self.model.add(Dropout(0.3))
+        #self.model.add(Flatten())
         self.model.add(Dense(total_words, activation='softmax'))
-        print(self.model.summary())
 
         self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         earlystop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-        self.model.fit(predictors, label, epochs=self.epochs, verbose=1, callbacks=[earlystop], batch_size=self.batch_size)
+        self.model.fit(predictors, label, epochs=500, verbose=1, callbacks=[earlystop], batch_size=self.batch_size)
+        print(self.model.summary())
 
-    def model_predict(self, input_seq):
-        return self.model.predict_classes(input_seq, verbose = 0).tolist()
+    def generate_text(self, seed_seq, seq_len):
+        if seed_seq.shape[1] != 1:
+            raise Exception("Input must have dimension 1")
+        res = []
+        for seq in seed_seq[:-1]:
+            predicted = self.model.predict_classes(seq, verbose=0)
+            res.extend(seq.tolist())
+        res.extend(seed_seq[-1].tolist())
+        curr_input = seed_seq[-1].reshape((1,1))
+        for _ in xrange(seq_len):
+            print curr_input
+            if curr_input.shape[1] != 1:
+                raise Exception("Input must have dimension 1")
+            predicted = self.model.predict_classes(curr_input, verbose=0)
+            res.extend(predicted.tolist())
+            curr_input = predicted.reshape((1,1))
+        return res
 
+    """
+    def generate_text(self, seed_text, next_words, max_sequence_len):
+        for _ in range(next_words):
+            token_list = self.tokenizer.texts_to_sequences([seed_text])[0]
+            token_list = pad_sequences([token_list], maxlen=self.max_len-1, padding='pre')
+            predicted = self.model.predict_classes(token_list, verbose=0)
+            
+            output_word = self.reverse_index[predicted]
+            seed_text += " " + output_word
+        return seed_text
+    """
