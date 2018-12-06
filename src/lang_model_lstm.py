@@ -78,7 +78,7 @@ class LSTMLanguageModel:
 
         self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         earlystop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-        self.model.fit(predictors[:1], label[:1], epochs=self.epochs, verbose=1, callbacks=[earlystop], batch_size=self.batch_size)
+        self.model.fit(predictors, label, epochs=self.epochs, verbose=1, callbacks=[earlystop], batch_size=self.batch_size)
 
     def model_predict(self, input_seq):
         return self.model.predict_classes(input_seq, verbose = 0).tolist()
