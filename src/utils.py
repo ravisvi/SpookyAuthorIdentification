@@ -249,6 +249,35 @@ def load_model_and_evaluate(model_file_name, weights_file_name, x_test, ls='bina
     # save this to pickle or write the answers to some json file.
     return y
 
+def load_model(model_file_name, weights_file_name, ls='binary_crossentropy', optz='rmsprop', metric=['accuracy']):
+    """
+    Loads a saved model and initializes the model with it's weights and returns it.
+
+    Args:
+        model_file_name: The saved model file name. Expects a complete URI if not present in the same folder.
+        weights_file_name: The weights that need to be loaded for the model. Again, complete URI if not present in the current folder.
+        ls: The loss type, default= binary_crossentropy
+        optz: Optimizer deafault = rmsprop.
+        metric: the metric default = ['accuracy']
+
+    Returns:
+        model: The loaded model
+    """
+    # load json and create model
+    json_file = open(model_file_name, 'r')
+    loaded_model_json = json_file.read()
+    json_file.close()
+    loaded_model = model_from_json(loaded_model_json)
+    # load weights into new model
+    loaded_model.load_weights(weights_file_name)
+    print(loaded_model.summary())
+    print("Loaded model from disk")
+
+    # evaluate loaded model on test data
+    loaded_model.compile(loss=ls, optimizer=optz, metrics=metric)
+
+    return loaded_model
+
 
 def write_kaggle_file(y_prediction, text_id_list, kaggle_filename='output/kaggle.csv'):
     """
