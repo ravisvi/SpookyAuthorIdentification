@@ -4,9 +4,10 @@ import numpy as np
 import string
 import cPickle as pickle
 import re
+from keras.preprocessing.text import Tokenizer
 
 class DataGenerator(object):
-    def __init__(self):
+    def __init__(self, vector_size=1):
         self.word_idx = {}
         self.word_idx["."] = 0
         self.reverse_idx = {}
@@ -14,7 +15,7 @@ class DataGenerator(object):
         self.count = 1
         self.input_seq = []
         self.target_seq = []
-        self.vector_size = 1
+        self.vector_size = vector_size
 
     def parse_text(self, word_list):
         for word in word_list:

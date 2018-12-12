@@ -9,7 +9,7 @@ import string
 import keras.backend as K
 
 class LSTMLanguageModel:
-    def __init__(self, embedding_size=50, layer_size=128, batch_size=128, epochs=100):
+    def __init__(self, embedding_size=50, layer_size=100, batch_size=128, epochs=100):
         self.tokenizer = Tokenizer()
         self.reverse_index = {}
         self.max_len = -1*float("inf")
@@ -58,8 +58,7 @@ class LSTMLanguageModel:
         print(self.model.summary())
 
         self.model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=['accuracy', self.perplexity])
-        earlystop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-        self.model.fit(predictors, label, epochs=self.epochs, verbose=1, callbacks=[earlystop], batch_size=self.batch_size)
+        self.model.fit(predictors, label, epochs=self.epochs, verbose=1, batch_size=self.batch_size)
 
     def train_model_vec(self, data_object):
         predictors, label = data_object.get_inputs()
@@ -75,8 +74,7 @@ class LSTMLanguageModel:
         print(self.model.summary())
 
         self.model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=['accuracy', self.perplexity])
-        earlystop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-        self.model.fit(predictors[:1], label[:1], epochs=self.epochs, verbose=1, callbacks=[earlystop], batch_size=self.batch_size)
+        self.model.fit(predictors[:1], label[:1], epochs=self.epochs, verbose=1, batch_size=self.batch_size)
 
     def model_predict(self, input_seq):
         return self.model.predict_classes(input_seq, verbose = 0).tolist()
