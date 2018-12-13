@@ -8,7 +8,7 @@ from DataGenerator import DataGenerator
 from DataGeneratorSeq import DataGeneratorSeq
 from DataGeneratorVec import DataGeneratorVector
 
-def main(glove_fname, fname, vec=True, seq=False, vector_size=1):
+def main(glove_fname, fname, vec=True, seq=False, vector_size=1, vocab_limit=10000):
     if vec:
         data_object = DataGeneratorVector()
     elif seq:
@@ -31,7 +31,7 @@ def main(glove_fname, fname, vec=True, seq=False, vector_size=1):
         text = text.translate(None, string.punctuation).lower().split()
         text = [word for word in text if word.isalpha()]
         data_object.parse_text(text)
-        if data_object.get_vocabulary_size() >= 10000:
+        if data_object.get_vocabulary_size() >= vocab_limit:
             break
     if vec:
         lm_object.train_model_vec(data_object)
@@ -47,23 +47,16 @@ def generate_sentence(lm_object, data_object, sentence, seq_len, vec=True):
     res.extend(sentence)
     vector_size = data_object.get_vector_size()
     for seq in seed_seq[:-1]:
-        if vec:
-            seq = seq.reshape((1,vector_size))
+    
         predicted = lm_object.model_predict(seq)
 
-    if vec:
-        curr_input = seed_seq[-1].reshape((1,1,vector_size))
-    else:
-        curr_input = seed_seq[-1].reshape((1,1))
+    curr_input = seed_seq[-1].reshape((1,vector_size))
 
     for _ in xrange(seq_len):
         predicted = lm_object.model_predict(curr_input)[0]
         curr_word = data_object.get_word(predicted)
         res.append(curr_word)
-        if vec:
-            curr_input = data_object.get_vector(curr_word).reshape((1,vector_size))
-        else:
-            curr_input = np.asarray([predicted]).reshape(1,1)
+        curr_input = np.asarray([predicted]).reshape((1,vector_size))
 
     print " ".join(res)
 
