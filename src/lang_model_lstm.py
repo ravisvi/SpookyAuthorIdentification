@@ -3,6 +3,7 @@ from keras.layers import Embedding, LSTM, Dense, Dropout, TimeDistributed, Activ
 from keras.preprocessing.text import Tokenizer
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.models import Sequential
+from keras.optimizers import Adam
 import keras.utils as ku 
 import numpy as np
 import string 
@@ -75,8 +76,8 @@ class LSTMLanguageModel:
         self.model.add(Dense(self.layer_size, activation='relu'))
         self.model.add(Dense(total_words, activation='softmax'))
         print(self.model.summary())
-
-        self.model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=['accuracy', self.perplexity])
+        optimizer = Adam(lr=0.01)
+        self.model.compile(loss='sparse_categorical_crossentropy', optimizer=optimizer, metrics=['accuracy', self.perplexity])
         self.model.fit(predictors, label, epochs=self.epochs, verbose=1, batch_size=self.batch_size)
 
     def model_predict(self, input_seq):
