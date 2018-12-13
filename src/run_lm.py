@@ -31,6 +31,8 @@ def main(glove_fname, fname, vec=True, seq=False, vector_size=1):
         text = text.translate(None, string.punctuation).lower().split()
         text = [word for word in text if word.isalpha()]
         data_object.parse_text(text)
+        if data_object.get_vocabulary_size() >= 5000:
+            break
     if vec:
         lm_object.train_model_vec(data_object)
     else:
