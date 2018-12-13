@@ -31,7 +31,7 @@ def main(glove_fname, fname, vec=True, seq=False, vector_size=1):
         text = text.translate(None, string.punctuation).lower().split()
         text = [word for word in text if word.isalpha()]
         data_object.parse_text(text)
-        if data_object.get_vocabulary_size() >= 5000:
+        if data_object.get_vocabulary_size() >= 10000:
             break
     if vec:
         lm_object.train_model_vec(data_object)
@@ -48,7 +48,7 @@ def generate_sentence(lm_object, data_object, sentence, seq_len, vec=True):
     vector_size = data_object.get_vector_size()
     for seq in seed_seq[:-1]:
         if vec:
-            seq = seq.reshape((1,1,vector_size))
+            seq = seq.reshape((1,vector_size))
         predicted = lm_object.model_predict(seq)
 
     if vec:
@@ -61,7 +61,7 @@ def generate_sentence(lm_object, data_object, sentence, seq_len, vec=True):
         curr_word = data_object.get_word(predicted)
         res.append(curr_word)
         if vec:
-            curr_input = data_object.get_vector(curr_word).reshape((1,1,vector_size))
+            curr_input = data_object.get_vector(curr_word).reshape((1,vector_size))
         else:
             curr_input = np.asarray([predicted]).reshape(1,1)
 

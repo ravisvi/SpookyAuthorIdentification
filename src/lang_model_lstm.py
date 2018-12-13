@@ -10,7 +10,7 @@ import string
 import keras.backend as K
 
 class LSTMLanguageModel:
-    def __init__(self, embedding_size=50, layer_size=100, batch_size=128, epochs=100):
+    def __init__(self, embedding_size=50, layer_size=128, batch_size=128, epochs=100):
         self.tokenizer = Tokenizer()
         self.reverse_index = {}
         self.max_len = -1*float("inf")
@@ -76,8 +76,7 @@ class LSTMLanguageModel:
         self.model.add(Dense(self.layer_size, activation='relu'))
         self.model.add(Dense(total_words, activation='softmax'))
         print(self.model.summary())
-        optimizer = Adam(lr=0.01)
-        self.model.compile(loss='sparse_categorical_crossentropy', optimizer=optimizer, metrics=['accuracy', self.perplexity])
+        self.model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=['accuracy', self.perplexity])
         self.model.fit(predictors, label, epochs=self.epochs, verbose=1, batch_size=self.batch_size)
 
     def model_predict(self, input_seq):
