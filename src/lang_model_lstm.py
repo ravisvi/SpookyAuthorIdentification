@@ -64,17 +64,20 @@ class LSTMLanguageModel:
         predictors, label = data_object.get_inputs()
         total_words = data_object.get_vocabulary_size()
         print total_words
-        self.vector_size = predictors.shape[2]
-        label = ku.to_categorical(label, num_classes=total_words)
+        self.vector_size = predictors.shape[1]
+        #label = ku.to_categorical(label, num_classes=total_words)
+        embedding_matrix = data_object.get_embedding_weights()
         self.model = Sequential()
-        self.model.add(LSTM(self.layer_size, input_shape=(1, self.vector_size), return_sequences=True))
+        e = Embedding(total_words, embedding_matrix.shape[1], weights=[embedding_matrix], input_length=self.vector_size, trainable=False)
+        self.model.add(e)
+        self.model.add(LSTM(self.layer_size, return_sequences=True))
         self.model.add(LSTM(self.layer_size))
         self.model.add(Dense(self.layer_size, activation='relu'))
         self.model.add(Dense(total_words, activation='softmax'))
         print(self.model.summary())
 
         self.model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=['accuracy', self.perplexity])
-        self.model.fit(predictors[:1], label[:1], epochs=self.epochs, verbose=1, batch_size=self.batch_size)
+        self.model.fit(predictors, label, epochs=self.epochs, verbose=1, batch_size=self.batch_size)
 
     def model_predict(self, input_seq):
         return self.model.predict_classes(input_seq, verbose = 0).tolist()

@@ -31,7 +31,6 @@ def main(glove_fname, fname, vec=True, seq=False, vector_size=1):
         text = text.translate(None, string.punctuation).lower().split()
         text = [word for word in text if word.isalpha()]
         data_object.parse_text(text)
-    print predictors.shape
     if vec:
         lm_object.train_model_vec(data_object)
     else:
@@ -68,4 +67,4 @@ def generate_sentence(lm_object, data_object, sentence, seq_len, vec=True):
 
 
 if __name__=="__main__":
-    lm_object, data_object = main("../data/glove.6B.50d.txt","../data/train.csv",vec=False,seq=True,vector_size=51)
+    lm_object, data_object = main("../data/glove.6B.50d.txt","../data/train.csv")
