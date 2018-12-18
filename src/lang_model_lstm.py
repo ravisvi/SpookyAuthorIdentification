@@ -82,3 +82,6 @@ class LSTMLanguageModel:
     def model_predict(self, input_seq):
         return self.model.predict_classes(input_seq, verbose = 0).tolist()
 
+    def model_metrics(self, input_seq, target):
+        return self.model.evaluate(x=input_seq, y=target, batch_size=self.batch_size, verbose=1)
+

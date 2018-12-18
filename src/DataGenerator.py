@@ -47,7 +47,7 @@ class DataGenerator(object):
         result = []
         for word in words:
             if word not in self.word_idx:
-                raise Exception("Word: " + word + " not found in word index. Model currently only generates text on vocabulary seen before")
+                return np.asarray([])
             result.append(self.word_idx[word])
         return np.asarray(result).reshape((len(words), self.vector_size))
 

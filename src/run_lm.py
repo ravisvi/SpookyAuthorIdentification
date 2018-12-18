@@ -8,7 +8,13 @@ from DataGenerator import DataGenerator
 from DataGeneratorSeq import DataGeneratorSeq
 from DataGeneratorVec import DataGeneratorVector
 
-def main(glove_fname, fname, vec=True, seq=False, vector_size=1, vocab_limit=10000):
+def clean_text(text):
+    text = text.replace("-"," ")
+    text = text.translate(None, string.punctuation).lower().split()
+    text = [word for word in text if word.isalpha()]
+    return text
+
+def main(glove_fname, fname, vec=True, seq=False, vector_size=1, vocab_limit=10000, author_name="EAP"):
     if vec:
         data_object = DataGeneratorVector()
     elif seq:
@@ -26,10 +32,8 @@ def main(glove_fname, fname, vec=True, seq=False, vector_size=1, vocab_limit=100
             first = False
             continue
         text_id, text, author = line.split('","')
-        if not author.startswith("EAP"): continue
-        text = text.replace("-"," ")
-        text = text.translate(None, string.punctuation).lower().split()
-        text = [word for word in text if word.isalpha()]
+        if not author.startswith(author_name): continue
+        text = clean_text(text)
         data_object.parse_text(text)
         if data_object.get_vocabulary_size() >= vocab_limit:
             break
@@ -64,6 +68,24 @@ def split_data(fname, test_limit=500):
     test_file.close()
     train_file.close()
 
+def test_set_metrics(test_fname, lm_object, data_object, author_name="EAP"):
+    infile = open(test_fname)
+    test_matrix = np.asarray([])
+    for line in infile:
+        text_id, text, author = line.split('","') 
+        if not author.startswith(author_name): continue
+        text = clean_text(text)
+        curr_test = data_object.get_sequence(text)
+        if curr_test.shape[0] == 0: continue
+        if test_matrix.shape[0] == 0:
+            test_matrix = curr_test
+        else:
+            test_matrix = np.vstack((test_matrix, curr_test))
+    test_seq = test_matrix[:-1]
+    test_target = test_matrix[1:]
+    print test_seq.shape, test_target.shape
+    print lm_object.model_metrics(test_seq, test_target)
+
 def generate_sentence(lm_object, data_object, sentence, seq_len, vec=True):
     sentence = sentence.replace("-"," ")
     sentence = sentence.translate(None, string.punctuation).lower().split()
@@ -87,5 +109,5 @@ def generate_sentence(lm_object, data_object, sentence, seq_len, vec=True):
 
 
 if __name__=="__main__":
-    lm_object, data_object = main("../data/glove.6B.50d.txt","../data/train.csv")
+    lm_object, data_object = main("../data/glove.6B.50d.txt","../data/train2.csv")
     #split_data("../data/train.csv")
