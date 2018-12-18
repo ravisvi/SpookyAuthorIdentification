@@ -94,7 +94,6 @@ def generate_sentence(lm_object, data_object, sentence, seq_len, vec=True):
     res.extend(sentence)
     vector_size = data_object.get_vector_size()
     for seq in seed_seq[:-1]:
-    
         predicted = lm_object.model_predict(seq)
 
     curr_input = seed_seq[-1].reshape((1,vector_size))

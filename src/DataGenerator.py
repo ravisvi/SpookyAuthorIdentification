@@ -9,15 +9,19 @@ from keras.preprocessing.text import Tokenizer
 class DataGenerator(object):
     def __init__(self, vector_size=1):
         self.word_idx = {}
-        self.word_idx["."] = 0
+        self.word_idx["<s>"] = 0
+        self.word_idx["</s>"] = 1
         self.reverse_idx = {}
-        self.reverse_idx[0] = "."
-        self.count = 1
+        self.reverse_idx[0] = "<s>"
+        self.reverse_idx[1] = "</s>"
+        self.count = 2
         self.input_seq = []
         self.target_seq = []
         self.vector_size = vector_size
 
     def parse_text(self, word_list):
+        self.input_seq.append(self.word_idx["<s>"])
+        self.target_seq.append(self.word_idx["<s>"])
         for word in word_list:
             if word not in self.word_idx:
                 self.word_idx[word] = self.count
@@ -25,8 +29,8 @@ class DataGenerator(object):
                 self.count += 1
             self.input_seq.append(self.word_idx[word])
             self.target_seq.append(self.word_idx[word])
-        self.input_seq.append(self.word_idx["."])
-        self.target_seq.append(self.word_idx["."])
+        self.input_seq.append(self.word_idx["</s>"])
+        self.target_seq.append(self.word_idx["</s>"])
 
     def get_inputs(self):
         if type(self.input_seq) is np.ndarray:

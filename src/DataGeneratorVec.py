@@ -24,6 +24,8 @@ class DataGeneratorVector(DataGenerator):
             except Exception, e:
                 print e
                 continue
+        self.glove["<s>"] = np.random.uniform(low=-0.005,high=0.005,size=(self.embedding_size,))
+        self.glove["</s>"] = np.random.uniform(low=-0.005,high=0.005,size=(self.embedding_size,))
         print "vector size: " + str(self.vector_size)
 
     def parse_text(self, word_list):
@@ -44,8 +46,12 @@ class DataGeneratorVector(DataGenerator):
             curr_seq.append(self.word_idx[word])
             curr_target.append(self.word_idx[word])
         if flag:
+            self.input_seq.append(self.word_idx["<s>"])
+            self.target_seq.append(self.word_idx["<s>"])
             self.input_seq.extend(curr_seq)
             self.target_seq.extend(curr_target)
+            self.input_seq.append(self.word_idx["</s>"])
+            self.target_seq.append(self.word_idx["</s>"])
 
     def get_embedding_weights(self):
         embedding_matrix = np.zeros((len(self.word_idx), self.embedding_size))

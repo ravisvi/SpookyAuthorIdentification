@@ -20,7 +20,6 @@ class LSTMLanguageModel:
         self.epochs = epochs
 
     def perplexity(self, y_true, y_pred):
-        print y_true, y_pred
         cross_entropy = K.sparse_categorical_crossentropy(y_true, y_pred)
         perplexity = K.exp(cross_entropy)
         return perplexity
