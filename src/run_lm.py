@@ -39,6 +39,31 @@ def main(glove_fname, fname, vec=True, seq=False, vector_size=1, vocab_limit=100
         lm_object.train_model(data_object)
     return lm_object, data_object
 
+def split_data(fname, test_limit=500):
+    test_fname = "test.csv"
+    train_fname = "train.csv"
+    author_counts = {}
+    infile = open(fname)
+    first = True
+    test_file = open(test_fname,"w")
+    train_file = open(train_fname,"w")
+    file_ptr = {}
+    for line in infile:
+        if first:
+            train_file.write(line)
+            first = False
+            continue
+        text_id, text, author = line.split('","')
+        if not author in author_counts: 
+            author_counts[author] = 0
+            file_ptr[author] = test_file
+        author_counts[author] += 1
+        file_ptr[author].write(line)
+        if author_counts[author] == test_limit:
+            file_ptr[author] = train_file
+    test_file.close()
+    train_file.close()
+
 def generate_sentence(lm_object, data_object, sentence, seq_len, vec=True):
     sentence = sentence.replace("-"," ")
     sentence = sentence.translate(None, string.punctuation).lower().split()
@@ -63,3 +88,4 @@ def generate_sentence(lm_object, data_object, sentence, seq_len, vec=True):
 
 if __name__=="__main__":
     lm_object, data_object = main("../data/glove.6B.50d.txt","../data/train.csv")
+    #split_data("../data/train.csv")

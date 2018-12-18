@@ -71,7 +71,7 @@ class LSTMLanguageModel:
         self.model = Sequential()
         e = Embedding(total_words, embedding_matrix.shape[1], weights=[embedding_matrix], input_length=self.vector_size, trainable=False)
         self.model.add(e)
-        #self.model.add(LSTM(self.layer_size, return_sequences=True))
+        self.model.add(LSTM(self.layer_size, return_sequences=True))
         self.model.add(LSTM(self.layer_size))
         self.model.add(Dense(self.layer_size, activation='relu'))
         self.model.add(Dense(total_words, activation='softmax'))
