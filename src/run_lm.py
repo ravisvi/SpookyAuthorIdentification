@@ -44,8 +44,8 @@ def main(glove_fname, fname, vec=True, seq=False, vector_size=1, vocab_limit=100
     return lm_object, data_object
 
 def split_data(fname, test_limit=500):
-    test_fname = "test.csv"
-    train_fname = "train.csv"
+    test_fname = "test2.csv"
+    train_fname = "train2.csv"
     author_counts = {}
     infile = open(fname)
     first = True

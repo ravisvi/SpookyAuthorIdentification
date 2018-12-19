@@ -21,7 +21,7 @@ class LSTMLanguageModel:
 
     def perplexity(self, y_true, y_pred):
         cross_entropy = K.sparse_categorical_crossentropy(y_true, y_pred)
-        perplexity = K.exp(cross_entropy)
+        perplexity = K.pow(2.0, cross_entropy)
         return perplexity
 
     def train_model_generator(self, data_generator, data_path=""):
